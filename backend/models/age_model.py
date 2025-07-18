@@ -21,7 +21,7 @@ class AgeModel:
             nn.ReLU(),
             nn.Linear(128, 1)
         )
-        self.model.load_state_dict(torch.load('D:\\kdd\\retina thing\\ocular_ai_MAIN\\ocular-ai-reveal\\python\\Age Prediction\\age_prediction_model.pth', map_location=self.device))
+        self.model.load_state_dict(torch.load('models/age_models/age_model.pth', map_location=self.device))
         self.model = self.model.to(self.device)
         self.model.eval()
         self.input_shape = (299, 299)
@@ -42,8 +42,8 @@ class AgeModel:
         # Convert to RGB if not already
         if image_pil.mode != 'RGB':
             image_pil = image_pil.convert('RGB')
-        image = self.transform(image_pil)
-        image = image.unsqueeze(0)  # Add batch dimension
+        image = self.transform(image_pil)  # shape: [3, 299, 299]
+        image = image.unsqueeze(0)         # shape: [1, 3, 299, 299]
         return image
 
     def predict(self, image_tensor) -> Dict[str, Any]:
@@ -51,7 +51,13 @@ class AgeModel:
             # If input is PIL, preprocess
             if isinstance(image_tensor, Image.Image):
                 image_tensor = self.preprocess(image_tensor)
+            # If input is numpy, convert to torch tensor and permute axes
+            if isinstance(image_tensor, np.ndarray):
+                image_tensor = torch.from_numpy(image_tensor).permute(2, 0, 1).unsqueeze(0)
             image_tensor = image_tensor.to(self.device)
+            if image_tensor.dtype == torch.uint8:
+                image_tensor = image_tensor.float().div(255)
+            print("Input dtype:", image_tensor.dtype, "min:", image_tensor.min().item(), "max:", image_tensor.max().item())
             with torch.no_grad():
                 pred = self.model(image_tensor)
                 predicted_age = float(pred.item())
