@@ -1,3 +1,4 @@
 myenv
 *.pth
-*.h5
+*.h5 
+python 

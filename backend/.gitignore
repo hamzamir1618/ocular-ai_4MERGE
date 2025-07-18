@@ -11,3 +11,4 @@ backend/models/dr_models/vit.pth
 __pycache__/
 *.py[cod]
 *.pyo
+venv
